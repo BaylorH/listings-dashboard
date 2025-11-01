@@ -137,20 +137,38 @@ function App() {
   // Analytics data
   const priceDistribution = useMemo(() => {
     const ranges = [
-      { label: '<$50k', min: 0, max: 50000, count: 0 },
-      { label: '$50k-$100k', min: 50000, max: 100000, count: 0 },
-      { label: '$100k-$250k', min: 100000, max: 250000, count: 0 },
-      { label: '$250k-$500k', min: 250000, max: 500000, count: 0 },
-      { label: '>$500k', min: 500000, max: Infinity, count: 0 },
+      { label: '$2.5M-$5M', min: 2500000, max: 5000000, count: 0 },
+      { label: '$5M-$10M', min: 5000000, max: 10000000, count: 0 },
+      { label: '$10M-$15M', min: 10000000, max: 15000000, count: 0 },
+      { label: '$15M-$25M', min: 15000000, max: 25000000, count: 0 },
+      { label: '$25M-$50M', min: 25000000, max: 50000000, count: 0 },
     ]
 
+    let counted = 0
+    let unaccounted = 0
+    
     listings.forEach((listing) => {
       const price = extractPrice(listing.price)
-      if (price > 0) {
-        const range = ranges.find((r) => price >= r.min && price < r.max)
-        if (range) range.count++
+      if (price >= 2500000 && price <= 50000000) {
+        // Include prices at exactly the max (e.g., exactly $50M goes in the last range)
+        const range = ranges.find((r) => price >= r.min && (price < r.max || (price === r.max && r.max === 50000000)))
+        if (range) {
+          range.count++
+          counted++
+        }
+      } else if (price > 0) {
+        // Price exists but outside the expected range - log for debugging
+        console.warn(`Listing "${listing.name}" has price ${price} outside expected range (2.5M-50M)`)
+        unaccounted++
+      } else {
+        // Price is 0 or invalid - listing likely has no price or price couldn't be parsed
+        unaccounted++
       }
     })
+    
+    if (unaccounted > 0) {
+      console.log(`Price distribution: ${counted} counted, ${unaccounted} unaccounted (total: ${listings.length})`)
+    }
 
     const maxCount = Math.max(...ranges.map((r) => r.count), 1)
     return ranges.map((r) => ({ ...r, percentage: (r.count / maxCount) * 100 }))
@@ -450,7 +468,7 @@ function App() {
                           }}
                         >
                           {/* Number at top of bar - always visible */}
-                          <div className="-mb-3 relative z-10 pointer-events-none">
+                          <div className="-mb-2 relative z-10 pointer-events-none">
                             <p className="text-xs font-bold text-white drop-shadow-lg">{florida.count}</p>
                           </div>
                           
@@ -537,7 +555,7 @@ function App() {
                           {/* State name on hover */}
                           <div 
                             className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
-                            style={{ opacity: 0 }}
+                            style={{ opacity: 0, zIndex: 9999 }}
                           >
                             <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
                               <p className="text-xs font-semibold text-slate-300 uppercase">{florida.state}</p>
@@ -558,13 +576,13 @@ function App() {
                         <div 
                           className="absolute flex flex-col items-center justify-end pointer-events-none"
                           style={{
-                            left: '18%',  // Position relative to image width - moved right
-                            bottom: '68%',  // Position from bottom - moved down
+                            left: '22.5%',  // Position relative to image width - moved left
+                            bottom: '61%',  // Position from bottom - moved up
                             transform: 'translate(-50%, 0)',
                           }}
                         >
                           {/* Number at top of bar - always visible */}
-                          <div className="-mb-3 relative z-10 pointer-events-none">
+                          <div className="-mb-2 relative z-10 pointer-events-none">
                             <p className="text-xs font-bold text-white drop-shadow-lg">{idaho.count}</p>
                           </div>
                           
@@ -637,7 +655,7 @@ function App() {
                             <div 
                               className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
                               style={{ 
-                                bottom: '-0.3rem',
+                                bottom: '-0.28rem',
                                 width: '0.75rem',
                                 height: '0.375rem',
                                 background: 'rgba(168, 85, 247, 0.55)',
@@ -651,10 +669,694 @@ function App() {
                           {/* State name on hover */}
                           <div 
                             className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
-                            style={{ opacity: 0 }}
+                            style={{ opacity: 0, zIndex: 9999 }}
                           >
                             <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
                               <p className="text-xs font-semibold text-slate-300 uppercase">{idaho.state}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Oregon Pink Light Beam */}
+                    {(() => {
+                      const oregon = stateDistribution.find(s => s.state?.toLowerCase() === 'oregon' || s.state?.toLowerCase() === 'or');
+                      if (!oregon) return null;
+                      
+                      const barHeight = Math.max((oregon.percentage / 100) * 120, 40);
+                      
+                      return (
+                        <div 
+                          className="absolute flex flex-col items-center justify-end pointer-events-none"
+                          style={{
+                            left: '13.5%',  // Position relative to image width - same as Idaho but 10% left
+                            bottom: '61%',  // Position from bottom - moved up slightly
+                            transform: 'translate(-50%, 0)',
+                          }}
+                        >
+                          {/* Number at top of bar - always visible */}
+                          <div className="-mb-2 relative z-10 pointer-events-none">
+                            <p className="text-xs font-bold text-white drop-shadow-lg">{oregon.count}</p>
+                          </div>
+                          
+                          {/* Light beam effect - pink */}
+                          <div 
+                            className="relative flex flex-col items-center justify-end group" 
+                            style={{ 
+                              pointerEvents: 'auto',
+                              width: '0.75rem',
+                              height: `${barHeight + 6}px`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(236, 72, 153, 0.6) 0%, rgba(236, 72, 153, 0.65) 15%, rgba(236, 72, 153, 0.7) 35%, rgba(236, 72, 153, 0.65) 55%, rgba(236, 72, 153, 0.55) 70%, rgba(236, 72, 153, 0.4) 82%, rgba(236, 72, 153, 0.2) 90%, rgba(236, 72, 153, 0.08) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 30px rgba(236, 72, 153, 0.5), 0 0 50px rgba(236, 72, 153, 0.3), 0 0 70px rgba(236, 72, 153, 0.2)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(236, 72, 153, 0.8)';
+                                semicircle.style.boxShadow = '0 0 12px rgba(236, 72, 153, 0.6), 0 0 20px rgba(236, 72, 153, 0.4), 0 0 30px rgba(236, 72, 153, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '1';
+                            }}
+                            onMouseLeave={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(236, 72, 153, 0.35) 0%, rgba(236, 72, 153, 0.4) 15%, rgba(236, 72, 153, 0.5) 35%, rgba(236, 72, 153, 0.4) 55%, rgba(236, 72, 153, 0.3) 70%, rgba(236, 72, 153, 0.2) 82%, rgba(236, 72, 153, 0.1) 90%, rgba(236, 72, 153, 0.04) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 20px rgba(236, 72, 153, 0.4), 0 0 40px rgba(236, 72, 153, 0.2), 0 0 60px rgba(236, 72, 153, 0.1)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(236, 72, 153, 0.55)';
+                                semicircle.style.boxShadow = '0 0 8px rgba(236, 72, 153, 0.4), 0 0 15px rgba(236, 72, 153, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '0';
+                            }}
+                          >
+                            <div 
+                              className="w-3 light-beam transform relative overflow-visible"
+                              style={{ 
+                                height: `${barHeight}px`,
+                                background: 'linear-gradient(to top, rgba(236, 72, 153, 0.35) 0%, rgba(236, 72, 153, 0.4) 15%, rgba(236, 72, 153, 0.5) 35%, rgba(236, 72, 153, 0.4) 55%, rgba(236, 72, 153, 0.3) 70%, rgba(236, 72, 153, 0.2) 82%, rgba(236, 72, 153, 0.1) 90%, rgba(236, 72, 153, 0.04) 96%, transparent 100%)',
+                                borderRadius: '0',
+                                maskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                boxShadow: '0 0 20px rgba(236, 72, 153, 0.4), 0 0 40px rgba(236, 72, 153, 0.2), 0 0 60px rgba(236, 72, 153, 0.1)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            >
+                              {/* Light glow effect */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to right, rgba(244, 114, 182, 0.3), rgba(236, 72, 153, 0.2), transparent)',
+                                }}
+                              />
+                              {/* Inner light core */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to top, rgba(244, 114, 182, 0.25) 0%, rgba(244, 114, 182, 0.15) 50%, rgba(244, 114, 182, 0.05) 80%, transparent 100%)',
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Semicircular base - pink */}
+                            <div 
+                              className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
+                              style={{ 
+                                bottom: '-0.28rem',
+                                width: '0.75rem',
+                                height: '0.375rem',
+                                background: 'rgba(236, 72, 153, 0.55)',
+                                borderRadius: '0 0 50% 50%',
+                                boxShadow: '0 0 8px rgba(236, 72, 153, 0.4), 0 0 15px rgba(236, 72, 153, 0.2)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          
+                          {/* State name on hover */}
+                          <div 
+                            className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
+                            style={{ opacity: 0, zIndex: 9999 }}
+                          >
+                            <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-slate-300 uppercase">{oregon.state}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Arizona Green Light Beam */}
+                    {(() => {
+                      const arizona = stateDistribution.find(s => s.state?.toLowerCase() === 'arizona' || s.state?.toLowerCase() === 'az');
+                      if (!arizona) return null;
+                      
+                      const barHeight = Math.max((arizona.percentage / 100) * 120, 40);
+                      
+                      return (
+                        <div 
+                          className="absolute flex flex-col items-center justify-end pointer-events-none"
+                          style={{
+                            left: '21%',  // Position relative to image width - moved left
+                            bottom: '30%',  // Position from bottom - moved up
+                            transform: 'translate(-50%, 0)',
+                          }}
+                        >
+                          {/* Number at top of bar - always visible */}
+                          <div className="-mb-2 relative z-10 pointer-events-none">
+                            <p className="text-xs font-bold text-white drop-shadow-lg">{arizona.count}</p>
+                          </div>
+                          
+                          {/* Light beam effect - green */}
+                          <div 
+                            className="relative flex flex-col items-center justify-end group" 
+                            style={{ 
+                              pointerEvents: 'auto',
+                              width: '0.75rem',
+                              height: `${barHeight + 6}px`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(34, 197, 94, 0.6) 0%, rgba(34, 197, 94, 0.65) 15%, rgba(34, 197, 94, 0.7) 35%, rgba(34, 197, 94, 0.65) 55%, rgba(34, 197, 94, 0.55) 70%, rgba(34, 197, 94, 0.4) 82%, rgba(34, 197, 94, 0.2) 90%, rgba(34, 197, 94, 0.08) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 30px rgba(34, 197, 94, 0.5), 0 0 50px rgba(34, 197, 94, 0.3), 0 0 70px rgba(34, 197, 94, 0.2)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(34, 197, 94, 0.8)';
+                                semicircle.style.boxShadow = '0 0 12px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.4), 0 0 30px rgba(34, 197, 94, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '1';
+                            }}
+                            onMouseLeave={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.4) 15%, rgba(34, 197, 94, 0.5) 35%, rgba(34, 197, 94, 0.4) 55%, rgba(34, 197, 94, 0.3) 70%, rgba(34, 197, 94, 0.2) 82%, rgba(34, 197, 94, 0.1) 90%, rgba(34, 197, 94, 0.04) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), 0 0 60px rgba(34, 197, 94, 0.1)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(34, 197, 94, 0.55)';
+                                semicircle.style.boxShadow = '0 0 8px rgba(34, 197, 94, 0.4), 0 0 15px rgba(34, 197, 94, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '0';
+                            }}
+                          >
+                            <div 
+                              className="w-3 light-beam transform relative overflow-visible"
+                              style={{ 
+                                height: `${barHeight}px`,
+                                background: 'linear-gradient(to top, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.4) 15%, rgba(34, 197, 94, 0.5) 35%, rgba(34, 197, 94, 0.4) 55%, rgba(34, 197, 94, 0.3) 70%, rgba(34, 197, 94, 0.2) 82%, rgba(34, 197, 94, 0.1) 90%, rgba(34, 197, 94, 0.04) 96%, transparent 100%)',
+                                borderRadius: '0',
+                                maskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                boxShadow: '0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(34, 197, 94, 0.2), 0 0 60px rgba(34, 197, 94, 0.1)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            >
+                              {/* Light glow effect */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to right, rgba(74, 222, 128, 0.3), rgba(34, 197, 94, 0.2), transparent)',
+                                }}
+                              />
+                              {/* Inner light core */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to top, rgba(74, 222, 128, 0.25) 0%, rgba(74, 222, 128, 0.15) 50%, rgba(74, 222, 128, 0.05) 80%, transparent 100%)',
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Semicircular base - green */}
+                            <div 
+                              className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
+                              style={{ 
+                                bottom: '-0.28rem',
+                                width: '0.75rem',
+                                height: '0.375rem',
+                                background: 'rgba(34, 197, 94, 0.55)',
+                                borderRadius: '0 0 50% 50%',
+                                boxShadow: '0 0 8px rgba(34, 197, 94, 0.4), 0 0 15px rgba(34, 197, 94, 0.2)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          
+                          {/* State name on hover */}
+                          <div 
+                            className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
+                            style={{ opacity: 0, zIndex: 9999 }}
+                          >
+                            <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-slate-300 uppercase">{arizona.state}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Texas Yellow Light Beam */}
+                    {(() => {
+                      const texas = stateDistribution.find(s => s.state?.toLowerCase() === 'texas' || s.state?.toLowerCase() === 'tx');
+                      if (!texas) return null;
+                      
+                      const barHeight = Math.max((texas.percentage / 100) * 120, 40);
+                      
+                      return (
+                        <div 
+                          className="absolute flex flex-col items-center justify-end pointer-events-none"
+                          style={{
+                            left: '46%',  // Position relative to image width
+                            bottom: '22%',  // Position from bottom - south
+                            transform: 'translate(-50%, 0)',
+                          }}
+                        >
+                          {/* Number at top of bar - always visible */}
+                          <div className="-mb-2 relative z-10 pointer-events-none">
+                            <p className="text-xs font-bold text-white drop-shadow-lg">{texas.count}</p>
+                          </div>
+                          
+                          {/* Light beam effect - yellow */}
+                          <div 
+                            className="relative flex flex-col items-center justify-end group" 
+                            style={{ 
+                              pointerEvents: 'auto',
+                              width: '0.75rem',
+                              height: `${barHeight + 6}px`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(250, 204, 21, 0.6) 0%, rgba(250, 204, 21, 0.65) 15%, rgba(250, 204, 21, 0.7) 35%, rgba(250, 204, 21, 0.65) 55%, rgba(250, 204, 21, 0.55) 70%, rgba(250, 204, 21, 0.4) 82%, rgba(250, 204, 21, 0.2) 90%, rgba(250, 204, 21, 0.08) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 30px rgba(250, 204, 21, 0.5), 0 0 50px rgba(250, 204, 21, 0.3), 0 0 70px rgba(250, 204, 21, 0.2)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(250, 204, 21, 0.8)';
+                                semicircle.style.boxShadow = '0 0 12px rgba(250, 204, 21, 0.6), 0 0 20px rgba(250, 204, 21, 0.4), 0 0 30px rgba(250, 204, 21, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '1';
+                            }}
+                            onMouseLeave={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(250, 204, 21, 0.35) 0%, rgba(250, 204, 21, 0.4) 15%, rgba(250, 204, 21, 0.5) 35%, rgba(250, 204, 21, 0.4) 55%, rgba(250, 204, 21, 0.3) 70%, rgba(250, 204, 21, 0.2) 82%, rgba(250, 204, 21, 0.1) 90%, rgba(250, 204, 21, 0.04) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 20px rgba(250, 204, 21, 0.4), 0 0 40px rgba(250, 204, 21, 0.2), 0 0 60px rgba(250, 204, 21, 0.1)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(250, 204, 21, 0.55)';
+                                semicircle.style.boxShadow = '0 0 8px rgba(250, 204, 21, 0.4), 0 0 15px rgba(250, 204, 21, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '0';
+                            }}
+                          >
+                            <div 
+                              className="w-3 light-beam transform relative overflow-visible"
+                              style={{ 
+                                height: `${barHeight}px`,
+                                background: 'linear-gradient(to top, rgba(250, 204, 21, 0.35) 0%, rgba(250, 204, 21, 0.4) 15%, rgba(250, 204, 21, 0.5) 35%, rgba(250, 204, 21, 0.4) 55%, rgba(250, 204, 21, 0.3) 70%, rgba(250, 204, 21, 0.2) 82%, rgba(250, 204, 21, 0.1) 90%, rgba(250, 204, 21, 0.04) 96%, transparent 100%)',
+                                borderRadius: '0',
+                                maskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                boxShadow: '0 0 20px rgba(250, 204, 21, 0.4), 0 0 40px rgba(250, 204, 21, 0.2), 0 0 60px rgba(250, 204, 21, 0.1)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            >
+                              {/* Light glow effect */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to right, rgba(253, 224, 71, 0.3), rgba(250, 204, 21, 0.2), transparent)',
+                                }}
+                              />
+                              {/* Inner light core */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to top, rgba(253, 224, 71, 0.25) 0%, rgba(253, 224, 71, 0.15) 50%, rgba(253, 224, 71, 0.05) 80%, transparent 100%)',
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Semicircular base - yellow */}
+                            <div 
+                              className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
+                              style={{ 
+                                bottom: '-0.28rem',
+                                width: '0.75rem',
+                                height: '0.375rem',
+                                background: 'rgba(250, 204, 21, 0.55)',
+                                borderRadius: '0 0 50% 50%',
+                                boxShadow: '0 0 8px rgba(250, 204, 21, 0.4), 0 0 15px rgba(250, 204, 21, 0.2)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          
+                          {/* State name on hover */}
+                          <div 
+                            className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
+                            style={{ opacity: 0, zIndex: 9999 }}
+                          >
+                            <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-slate-300 uppercase">{texas.state}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Utah Teal Light Beam */}
+                    {(() => {
+                      const utah = stateDistribution.find(s => s.state?.toLowerCase() === 'utah' || s.state?.toLowerCase() === 'ut');
+                      if (!utah) return null;
+                      
+                      const barHeight = Math.max((utah.percentage / 100) * 120, 40);
+                      
+                      return (
+                        <div 
+                          className="absolute flex flex-col items-center justify-end pointer-events-none"
+                          style={{
+                            left: '26%',  // Position relative to image width - moved right
+                            bottom: '46%',  // Position from bottom - moved up
+                            transform: 'translate(-50%, 0)',
+                          }}
+                        >
+                          {/* Number at top of bar - always visible */}
+                          <div className="-mb-2 relative z-10 pointer-events-none">
+                            <p className="text-xs font-bold text-white drop-shadow-lg">{utah.count}</p>
+                          </div>
+                          
+                          {/* Light beam effect - teal */}
+                          <div 
+                            className="relative flex flex-col items-center justify-end group" 
+                            style={{ 
+                              pointerEvents: 'auto',
+                              width: '0.75rem',
+                              height: `${barHeight + 6}px`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(20, 184, 166, 0.6) 0%, rgba(20, 184, 166, 0.65) 15%, rgba(20, 184, 166, 0.7) 35%, rgba(20, 184, 166, 0.65) 55%, rgba(20, 184, 166, 0.55) 70%, rgba(20, 184, 166, 0.4) 82%, rgba(20, 184, 166, 0.2) 90%, rgba(20, 184, 166, 0.08) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 30px rgba(20, 184, 166, 0.5), 0 0 50px rgba(20, 184, 166, 0.3), 0 0 70px rgba(20, 184, 166, 0.2)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(20, 184, 166, 0.8)';
+                                semicircle.style.boxShadow = '0 0 12px rgba(20, 184, 166, 0.6), 0 0 20px rgba(20, 184, 166, 0.4), 0 0 30px rgba(20, 184, 166, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '1';
+                            }}
+                            onMouseLeave={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(20, 184, 166, 0.35) 0%, rgba(20, 184, 166, 0.4) 15%, rgba(20, 184, 166, 0.5) 35%, rgba(20, 184, 166, 0.4) 55%, rgba(20, 184, 166, 0.3) 70%, rgba(20, 184, 166, 0.2) 82%, rgba(20, 184, 166, 0.1) 90%, rgba(20, 184, 166, 0.04) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 20px rgba(20, 184, 166, 0.4), 0 0 40px rgba(20, 184, 166, 0.2), 0 0 60px rgba(20, 184, 166, 0.1)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(20, 184, 166, 0.55)';
+                                semicircle.style.boxShadow = '0 0 8px rgba(20, 184, 166, 0.4), 0 0 15px rgba(20, 184, 166, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '0';
+                            }}
+                          >
+                            <div 
+                              className="w-3 light-beam transform relative overflow-visible"
+                              style={{ 
+                                height: `${barHeight}px`,
+                                background: 'linear-gradient(to top, rgba(20, 184, 166, 0.35) 0%, rgba(20, 184, 166, 0.4) 15%, rgba(20, 184, 166, 0.5) 35%, rgba(20, 184, 166, 0.4) 55%, rgba(20, 184, 166, 0.3) 70%, rgba(20, 184, 166, 0.2) 82%, rgba(20, 184, 166, 0.1) 90%, rgba(20, 184, 166, 0.04) 96%, transparent 100%)',
+                                borderRadius: '0',
+                                maskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                boxShadow: '0 0 20px rgba(20, 184, 166, 0.4), 0 0 40px rgba(20, 184, 166, 0.2), 0 0 60px rgba(20, 184, 166, 0.1)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            >
+                              {/* Light glow effect */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to right, rgba(94, 234, 212, 0.3), rgba(20, 184, 166, 0.2), transparent)',
+                                }}
+                              />
+                              {/* Inner light core */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to top, rgba(94, 234, 212, 0.25) 0%, rgba(94, 234, 212, 0.15) 50%, rgba(94, 234, 212, 0.05) 80%, transparent 100%)',
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Semicircular base - teal */}
+                            <div 
+                              className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
+                              style={{ 
+                                bottom: '-0.28rem',
+                                width: '0.75rem',
+                                height: '0.375rem',
+                                background: 'rgba(20, 184, 166, 0.55)',
+                                borderRadius: '0 0 50% 50%',
+                                boxShadow: '0 0 8px rgba(20, 184, 166, 0.4), 0 0 15px rgba(20, 184, 166, 0.2)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          
+                          {/* State name on hover */}
+                          <div 
+                            className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
+                            style={{ opacity: 0, zIndex: 9999 }}
+                          >
+                            <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-slate-300 uppercase">{utah.state}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Nevada Red Light Beam */}
+                    {(() => {
+                      const nevada = stateDistribution.find(s => s.state?.toLowerCase() === 'nevada' || s.state?.toLowerCase() === 'nv');
+                      if (!nevada) return null;
+                      
+                      const barHeight = Math.max((nevada.percentage / 100) * 120, 40);
+                      
+                      return (
+                        <div 
+                          className="absolute flex flex-col items-center justify-end pointer-events-none"
+                          style={{
+                            left: '17%',  // Position relative to image width - moved right
+                            bottom: '49%',  // Position from bottom - moved up
+                            transform: 'translate(-50%, 0)',
+                          }}
+                        >
+                          {/* Number at top of bar - always visible */}
+                          <div className="-mb-2 relative z-10 pointer-events-none">
+                            <p className="text-xs font-bold text-white drop-shadow-lg">{nevada.count}</p>
+                          </div>
+                          
+                          {/* Light beam effect - red */}
+                          <div 
+                            className="relative flex flex-col items-center justify-end group" 
+                            style={{ 
+                              pointerEvents: 'auto',
+                              width: '0.75rem',
+                              height: `${barHeight + 6}px`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(239, 68, 68, 0.6) 0%, rgba(239, 68, 68, 0.65) 15%, rgba(239, 68, 68, 0.7) 35%, rgba(239, 68, 68, 0.65) 55%, rgba(239, 68, 68, 0.55) 70%, rgba(239, 68, 68, 0.4) 82%, rgba(239, 68, 68, 0.2) 90%, rgba(239, 68, 68, 0.08) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.5), 0 0 50px rgba(239, 68, 68, 0.3), 0 0 70px rgba(239, 68, 68, 0.2)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(239, 68, 68, 0.8)';
+                                semicircle.style.boxShadow = '0 0 12px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.4), 0 0 30px rgba(239, 68, 68, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '1';
+                            }}
+                            onMouseLeave={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(239, 68, 68, 0.35) 0%, rgba(239, 68, 68, 0.4) 15%, rgba(239, 68, 68, 0.5) 35%, rgba(239, 68, 68, 0.4) 55%, rgba(239, 68, 68, 0.3) 70%, rgba(239, 68, 68, 0.2) 82%, rgba(239, 68, 68, 0.1) 90%, rgba(239, 68, 68, 0.04) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2), 0 0 60px rgba(239, 68, 68, 0.1)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(239, 68, 68, 0.55)';
+                                semicircle.style.boxShadow = '0 0 8px rgba(239, 68, 68, 0.4), 0 0 15px rgba(239, 68, 68, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '0';
+                            }}
+                          >
+                            <div 
+                              className="w-3 light-beam transform relative overflow-visible"
+                              style={{ 
+                                height: `${barHeight}px`,
+                                background: 'linear-gradient(to top, rgba(239, 68, 68, 0.35) 0%, rgba(239, 68, 68, 0.4) 15%, rgba(239, 68, 68, 0.5) 35%, rgba(239, 68, 68, 0.4) 55%, rgba(239, 68, 68, 0.3) 70%, rgba(239, 68, 68, 0.2) 82%, rgba(239, 68, 68, 0.1) 90%, rgba(239, 68, 68, 0.04) 96%, transparent 100%)',
+                                borderRadius: '0',
+                                maskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                boxShadow: '0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2), 0 0 60px rgba(239, 68, 68, 0.1)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            >
+                              {/* Light glow effect */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to right, rgba(248, 113, 113, 0.3), rgba(239, 68, 68, 0.2), transparent)',
+                                }}
+                              />
+                              {/* Inner light core */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to top, rgba(248, 113, 113, 0.25) 0%, rgba(248, 113, 113, 0.15) 50%, rgba(248, 113, 113, 0.05) 80%, transparent 100%)',
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Semicircular base - red */}
+                            <div 
+                              className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
+                              style={{ 
+                                bottom: '-0.28rem',
+                                width: '0.75rem',
+                                height: '0.375rem',
+                                background: 'rgba(239, 68, 68, 0.55)',
+                                borderRadius: '0 0 50% 50%',
+                                boxShadow: '0 0 8px rgba(239, 68, 68, 0.4), 0 0 15px rgba(239, 68, 68, 0.2)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          
+                          {/* State name on hover */}
+                          <div 
+                            className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
+                            style={{ opacity: 0, zIndex: 9999 }}
+                          >
+                            <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-slate-300 uppercase">{nevada.state}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Colorado Indigo Light Beam */}
+                    {(() => {
+                      const colorado = stateDistribution.find(s => s.state?.toLowerCase() === 'colorado' || s.state?.toLowerCase() === 'co');
+                      if (!colorado) return null;
+                      
+                      const barHeight = Math.max((colorado.percentage / 100) * 120, 40);
+                      
+                      return (
+                        <div 
+                          className="absolute flex flex-col items-center justify-end pointer-events-none"
+                          style={{
+                            left: '35%',  // Position relative to image width - central region
+                            bottom: '46%',  // Position from bottom - moved up
+                            transform: 'translate(-50%, 0)',
+                          }}
+                        >
+                          {/* Number at top of bar - always visible */}
+                          <div className="-mb-2 relative z-10 pointer-events-none">
+                            <p className="text-xs font-bold text-white drop-shadow-lg">{colorado.count}</p>
+                          </div>
+                          
+                          {/* Light beam effect - indigo */}
+                          <div 
+                            className="relative flex flex-col items-center justify-end group" 
+                            style={{ 
+                              pointerEvents: 'auto',
+                              width: '0.75rem',
+                              height: `${barHeight + 6}px`,
+                            }}
+                            onMouseEnter={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(99, 102, 241, 0.6) 0%, rgba(99, 102, 241, 0.65) 15%, rgba(99, 102, 241, 0.7) 35%, rgba(99, 102, 241, 0.65) 55%, rgba(99, 102, 241, 0.55) 70%, rgba(99, 102, 241, 0.4) 82%, rgba(99, 102, 241, 0.2) 90%, rgba(99, 102, 241, 0.08) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 30px rgba(99, 102, 241, 0.5), 0 0 50px rgba(99, 102, 241, 0.3), 0 0 70px rgba(99, 102, 241, 0.2)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(99, 102, 241, 0.8)';
+                                semicircle.style.boxShadow = '0 0 12px rgba(99, 102, 241, 0.6), 0 0 20px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '1';
+                            }}
+                            onMouseLeave={(e) => {
+                              const beam = e.currentTarget.querySelector('.light-beam') as HTMLElement;
+                              const semicircle = e.currentTarget.querySelector('.light-semicircle') as HTMLElement;
+                              const tooltip = e.currentTarget.parentElement?.querySelector('.state-tooltip') as HTMLElement;
+                              if (beam) {
+                                beam.style.background = 'linear-gradient(to top, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0.4) 15%, rgba(99, 102, 241, 0.5) 35%, rgba(99, 102, 241, 0.4) 55%, rgba(99, 102, 241, 0.3) 70%, rgba(99, 102, 241, 0.2) 82%, rgba(99, 102, 241, 0.1) 90%, rgba(99, 102, 241, 0.04) 96%, transparent 100%)';
+                                beam.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(99, 102, 241, 0.2), 0 0 60px rgba(99, 102, 241, 0.1)';
+                              }
+                              if (semicircle) {
+                                semicircle.style.background = 'rgba(99, 102, 241, 0.55)';
+                                semicircle.style.boxShadow = '0 0 8px rgba(99, 102, 241, 0.4), 0 0 15px rgba(99, 102, 241, 0.2)';
+                              }
+                              if (tooltip) tooltip.style.opacity = '0';
+                            }}
+                          >
+                            <div 
+                              className="w-3 light-beam transform relative overflow-visible"
+                              style={{ 
+                                height: `${barHeight}px`,
+                                background: 'linear-gradient(to top, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0.4) 15%, rgba(99, 102, 241, 0.5) 35%, rgba(99, 102, 241, 0.4) 55%, rgba(99, 102, 241, 0.3) 70%, rgba(99, 102, 241, 0.2) 82%, rgba(99, 102, 241, 0.1) 90%, rgba(99, 102, 241, 0.04) 96%, transparent 100%)',
+                                borderRadius: '0',
+                                maskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.5) 95%, transparent 100%)',
+                                boxShadow: '0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(99, 102, 241, 0.2), 0 0 60px rgba(99, 102, 241, 0.1)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            >
+                              {/* Light glow effect */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to right, rgba(129, 140, 248, 0.3), rgba(99, 102, 241, 0.2), transparent)',
+                                }}
+                              />
+                              {/* Inner light core */}
+                              <div 
+                                className="absolute inset-0"
+                                style={{
+                                  background: 'linear-gradient(to top, rgba(129, 140, 248, 0.25) 0%, rgba(129, 140, 248, 0.15) 50%, rgba(129, 140, 248, 0.05) 80%, transparent 100%)',
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Semicircular base - indigo */}
+                            <div 
+                              className="light-semicircle absolute left-1/2 transform -translate-x-1/2"
+                              style={{ 
+                                bottom: '-0.28rem',
+                                width: '0.75rem',
+                                height: '0.375rem',
+                                background: 'rgba(99, 102, 241, 0.55)',
+                                borderRadius: '0 0 50% 50%',
+                                boxShadow: '0 0 8px rgba(99, 102, 241, 0.4), 0 0 15px rgba(99, 102, 241, 0.2)',
+                                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                              }}
+                            />
+                          </div>
+                          
+                          {/* State name on hover */}
+                          <div 
+                            className="state-tooltip mt-1 transition-opacity duration-200 pointer-events-none"
+                            style={{ opacity: 0, zIndex: 9999 }}
+                          >
+                            <div className="bg-slate-900/80 border border-slate-600/50 rounded px-2 py-0.5 shadow-lg backdrop-blur-sm">
+                              <p className="text-xs font-semibold text-slate-300 uppercase">{colorado.state}</p>
                             </div>
                           </div>
                         </div>
