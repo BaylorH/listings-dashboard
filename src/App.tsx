@@ -419,7 +419,7 @@ function App() {
 
             {/* Price Distribution */}
             <div className="mb-8">
-              <h4 className="text-sm font-semibold text-slate-400 mb-4">Price Distribution</h4>
+              <h4 className="text-sm font-semibold text-slate-400 mb-4 text-right">Price Distribution</h4>
               <div className="space-y-3">
                 {priceDistribution.map((range) => (
                   <div key={range.label}>
@@ -440,7 +440,7 @@ function App() {
 
             {/* State Distribution - US Map */}
             <div className="mb-8">
-              <h4 className="text-sm font-semibold text-slate-400 mb-4">State Distribution</h4>
+              <h4 className="text-sm font-semibold text-slate-400 mb-4 text-right">State Distribution</h4>
               <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm border border-slate-700/50">
                 <div className="relative inline-block w-full">
                   {/* US Map PNG - wrapper to position bars relative to image */}
@@ -456,7 +456,7 @@ function App() {
                       const florida = stateDistribution.find(s => s.state?.toLowerCase() === 'florida' || s.state?.toLowerCase() === 'fl');
                       if (!florida) return null;
                       
-                      const barHeight = Math.max((florida.percentage / 100) * 120, 40); // Smaller max height
+                      const barHeight = Math.max((florida.percentage / 100) * 80, 30); // Smaller max height
                       
                       return (
                         <div 
@@ -570,7 +570,7 @@ function App() {
                       const idaho = stateDistribution.find(s => s.state?.toLowerCase() === 'idaho' || s.state?.toLowerCase() === 'id');
                       if (!idaho) return null;
                       
-                      const barHeight = Math.max((idaho.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((idaho.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
@@ -684,7 +684,7 @@ function App() {
                       const oregon = stateDistribution.find(s => s.state?.toLowerCase() === 'oregon' || s.state?.toLowerCase() === 'or');
                       if (!oregon) return null;
                       
-                      const barHeight = Math.max((oregon.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((oregon.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
@@ -798,7 +798,7 @@ function App() {
                       const arizona = stateDistribution.find(s => s.state?.toLowerCase() === 'arizona' || s.state?.toLowerCase() === 'az');
                       if (!arizona) return null;
                       
-                      const barHeight = Math.max((arizona.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((arizona.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
@@ -912,7 +912,7 @@ function App() {
                       const texas = stateDistribution.find(s => s.state?.toLowerCase() === 'texas' || s.state?.toLowerCase() === 'tx');
                       if (!texas) return null;
                       
-                      const barHeight = Math.max((texas.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((texas.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
@@ -1026,7 +1026,7 @@ function App() {
                       const utah = stateDistribution.find(s => s.state?.toLowerCase() === 'utah' || s.state?.toLowerCase() === 'ut');
                       if (!utah) return null;
                       
-                      const barHeight = Math.max((utah.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((utah.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
@@ -1140,7 +1140,7 @@ function App() {
                       const nevada = stateDistribution.find(s => s.state?.toLowerCase() === 'nevada' || s.state?.toLowerCase() === 'nv');
                       if (!nevada) return null;
                       
-                      const barHeight = Math.max((nevada.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((nevada.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
@@ -1254,7 +1254,7 @@ function App() {
                       const colorado = stateDistribution.find(s => s.state?.toLowerCase() === 'colorado' || s.state?.toLowerCase() === 'co');
                       if (!colorado) return null;
                       
-                      const barHeight = Math.max((colorado.percentage / 100) * 120, 40);
+                      const barHeight = Math.max((colorado.percentage / 100) * 80, 30);
                       
                       return (
                         <div 
